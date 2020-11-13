@@ -1,0 +1,72 @@
+plugins {
+    id 'java'
+    id 'de.undercouch.download' version '4.1.1'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    implementation project(':shared')
+    implementation group: 'com.squareup', name: 'javapoet', version: '1.13.0'
+    implementation group: 'com.squareup.moshi', name: 'moshi-adapters', version: '1.11.0'
+    implementation group: 'com.squareup.moshi', name: 'moshi', version: '1.11.0'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+}
+
+// create directories we need for code generation
+task createDirs() {
+    doLast {
+        mkdir "${project(':plurals').buildDir}/gen/src"
+        mkdir "${project(':plurals').buildDir}/gen/test"
+    }
+}
+
+// download latest CLDR: https://github.com/unicode-cldr/cldr-core/tree/master/supplemental
+task downloadCLDR(dependsOn: createDirs, type: Download) {
+    src([
+            'https://raw.githubusercontent.com/unicode-cldr/cldr-core/master/supplemental/plurals.json',
+            'https://raw.githubusercontent.com/unicode-cldr/cldr-core/master/supplemental/ordinals.json'
+    ])
+    dest "$buildDir/CLDR"
+    tempAndMove true
+    overwrite false
+}
+
+task executeMaker(dependsOn: downloadCLDR, type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = "net.xyzsd.plurals.maker.PluralMaker"
+
+    args = [
+            "$buildDir/CLDR/plurals.json",
+            "$buildDir/CLDR/ordinals.json",
+            // test resources directly in directory .. not ideal
+            "${rootDir}/plurals/src/test/resources",
+            "${project(':plurals').buildDir}/gen/src"
+    ]
+
+}
+
+// Only run PluralMaker if it hasn't already run
+// NOTE: this only checks a single possible output. If build fails, do a clean build
+executeMaker.onlyIf {
+    !(new File("${project(':plurals').buildDir}/gen/src/net/xyzsd/plurals/PluralRules.java")).exists()
+}
+
+// this line is key; runs the given task after compile
+compileJava.finalizedBy executeMaker
+
+
+clean.doFirst {
+    delete "${rootDir}/plurals/src/test/resources/cardinal_samples.json"
+    delete "${rootDir}/plurals/src/test/resources/ordinal_samples.json"
+}

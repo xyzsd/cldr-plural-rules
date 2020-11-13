@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    targetCompatibility = JavaVersion.VERSION_1_8;
+    sourceCompatibility = JavaVersion.VERSION_1_8;
+}
+
+// 'plurals' will not compile UNTIL PluralMaker generates the needed source
+// currently this occurs after the compilation ('implementation') phase in ':maker'
+// A better way, though, might be to depend upon the presence of generated source
+// and (for tests) generated test sample data.
+dependencies {
+    implementation project(':shared')
+    implementation project(':maker')
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+
+    // THIS IS HORRIBLE
+    // but it works; the tests compile and run
+    // it took longer to create the gradle build files than the entire project
+    //
+    runtime 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    implementation  'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    implementation group: 'com.squareup.moshi', name: 'moshi-adapters', version: '1.11.0'
+    implementation group: 'com.squareup.moshi', name: 'moshi', version: '1.11.0'
+
+    /*
+    // this is NOT working. for some reason
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation  'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    testImplementation group: 'com.squareup.moshi', name: 'moshi-adapters', version: '1.11.0'
+    testImplementation group: 'com.squareup.moshi', name: 'moshi', version: '1.11.0'
+     */
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// pull in default source tree AND generated source
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src","$buildDir/gen/src"]
+        }
+    }
+}
+
+
+
+
+
+

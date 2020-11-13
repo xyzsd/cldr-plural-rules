@@ -1,0 +1,148 @@
+plugins {
+    id 'java'
+    id "io.freefair.aggregate-javadoc" version "5.2.1"
+    id 'maven-publish'
+    id 'signing'
+}
+
+group 'net.xyzsd.plurals'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+
+}
+
+
+dependencies {
+    implementation project(':plurals')
+}
+
+
+
+// choose how we assemble the library jar
+jar {
+    manifest {
+        attributes "Automatic-Module-Name": "${rootProject.group}"
+    }
+
+    includeEmptyDirs = false
+
+    // do not include 'PluralMaker' : not part of library
+    from "${project(':plurals').buildDir}/classes/java/main/"
+    from "${project(':shared').buildDir}/classes/java/main/"
+
+    // workaround for a workaround: see build file in Plurals w.r.t. testing
+    exclude "**/PluralRuleTest.class"
+
+    // omit full license text to keep size down; "LICENSE" includes references (URLs) to license text
+    from "$projectDir/LICENSE"
+}
+
+// library sources (no PluralMaker)
+task sourcesJar(type: Jar, dependsOn: classes) {
+    archiveClassifier = 'sources'
+    includeEmptyDirs = false
+    from "${project.rootDir}/${project(':shared').name}/src/main/java"
+    from "${project.rootDir}/${project(':plurals').name}/src/main/java"
+    from "${project(':plurals').buildDir}/gen/src"
+}
+
+// TODO: exclude 'pluralmaker' from aggregated javadocs
+task aggregateJavadocJar(type: Jar, dependsOn: aggregateJavadoc) {
+    archiveClassifier = "javadoc"
+    //archivesBaseName = "${rootProject.name}-javadocs"
+    //archiveExtension = "jar"
+    from "${buildDir}/docs"
+}
+
+javadoc.finalizedBy aggregateJavadoc
+aggregateJavadoc.finalizedBy aggregateJavadocJar
+
+
+signing {
+    sign configurations.archives
+    sign aggregateJavadocJar
+    sign sourcesJar
+}
+
+task signPom(type: Sign) {
+    sign project.file('build/publications/mavenJava/pom-default.xml')
+    outputs.upToDateWhen { false }
+}
+
+
+// FFS, 'maven-publish' plugin ... doesn't. At least not  without lots of help !
+// https://stackoverflow.com/questions/16560235/how-to-sign-maven-publications-with-gradle
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+
+            artifact jar
+            artifact sourcesJar
+            artifact aggregateJavadocJar
+
+            // straight up from SO 16560235
+            project.tasks.withType(Sign) {
+                signatures.all {
+                    def type = it.type
+                    if (it.file.name.endsWith('.tar.gz.asc')) {  // Workaround in case a tar.gz file should published
+                        type = 'tar.gz.asc'
+                    } else if (it.type.equals('xml.asc')) {  // Set correct extension for signature of pom file
+                        type = 'pom.asc'
+                    }
+                    artifact source: it.file, classifier: it.classifier ?: null, extension: type
+                }
+            }
+
+            pom {
+                name = 'CLDR Plural Rules'
+                description = 'CLDR Pluralization handling for Java'
+                url = 'https://github.com/xyzsd/cldr-plural-rules'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                    license {
+                        name = 'MIT'
+                        url = 'http://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'xyzsd'
+                        name = 'ZDel'
+                        email = 'xyzsd@xyzsd.net'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/xyzsd/cldr-plural-rules.git'
+                    developerConnection = 'scm:git:ssh://git@github.com:xyzsd/cldr-plural-rules.git'
+                    url = 'https://github.com/xyzsd/cldr-plural-rules'
+                }
+
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            // SNAPSHOT: url 'https://oss.sonatype.org/content/repositories/snapshots'
+            // RELEASE: (staging)
+            url 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+            credentials {
+                username sonatypeUsername
+                password sonatypePassword
+            }
+        }
+    }
+}
+
+
+

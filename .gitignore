@@ -1,0 +1,60 @@
+.log
+.classpath
+.project
+.settings
+.iws
+bin
+gen
+build/
+out
+lib
+
+
+target
+*.class
+*.log
+pm.xml.*
+
+.idea
+*.iml
+*.ipr
+*.iws
+classes
+
+obj
+.DS_Store
+.gradle
+
+# ssh #
+**/.ssh/id_*
+**/.ssh/*_id_*
+**/.ssh/known_hosts
+
+### Gradle ###
+.gradle
+build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+### Gradle Patch ###
+**/build/
+
+### GPG ###
+secring.*
+
+### SSH ###
+**/.ssh/id_*
+**/.ssh/*_id_*
+**/.ssh/known_hosts
+
+# props to https://www.toptal.com/developers/gitignore/
