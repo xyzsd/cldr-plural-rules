@@ -7,3 +7,10 @@ Rules are compiled, improving performance, and generated from CLDR rulesets.
 # Usage
 
 
+
+# Building from source
+
+The included Gradle build file will download current (CLDR 37) source,
+generate the rules from the CLDR definitions,
+and create the release package (including source and 
+documentation).
