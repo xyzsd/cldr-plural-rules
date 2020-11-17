@@ -13,14 +13,14 @@ repositories {
 }
 
 java {
-
+    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_11
 }
 
 
 dependencies {
     implementation project(':plurals')
 }
-
 
 
 // choose how we assemble the library jar
@@ -56,8 +56,11 @@ task aggregateJavadocJar(type: Jar, dependsOn: aggregateJavadoc) {
     archiveClassifier = "javadoc"
     //archivesBaseName = "${rootProject.name}-javadocs"
     //archiveExtension = "jar"
-    from "${buildDir}/docs"
+    from "${buildDir}/docs/javadoc"
+    exclude "META-INF/**"
+    exclude "META-INF"
 }
+
 
 javadoc.finalizedBy aggregateJavadoc
 aggregateJavadoc.finalizedBy aggregateJavadocJar
@@ -69,6 +72,7 @@ signing {
     sign sourcesJar
 }
 
+// also from SO 16560235
 task signPom(type: Sign) {
     sign project.file('build/publications/mavenJava/pom-default.xml')
     outputs.upToDateWhen { false }

@@ -1,16 +1,193 @@
 # cldr-plural-rules
-Simplified CLDR pluralization handling for Java.
-Rules are compiled, improving performance, and generated from CLDR rulesets.
+CLDR pluralization handling for Java.
 
-# Description
+This project extracts plural rules from CLDR data sets (as defined by Unicode [TR35][tr35]), generates the rules as Java code, 
+and creates a library for using these rules which is independent from the [ICU][icu] library, specifically [ICU4J][icu4j].
+This project is compliant with the [CLDR Language Plural Rules][cldrPlurals].
 
-# Usage
+The generated library ([available here][dlv1]) is:
+* Current with Unicode 13/CLDR 37 ([ICU 67][icu67])
+* Contains all languages and regions as defined by ICU 67
+* Small (~ 24 kB .jar) 
+* Has no dependencies.
+
+Usage
+-----
+
+Get the plural rule for a given locale and number type ([cardinal][cardinal] or [ordinal][ordinal]):
+```java
+PluralRule rule = PluralRule.createOrDefault( Locale.ENGLISH, PluralRuleType.CARDINAL );
+```
+
+The rule can then be used for plural selection:
+```java
+PluralRule rule = PluralRule.createOrDefault( Locale.ENGLISH, PluralRuleType.CARDINAL );
+PluralCategory category = rule.select( 2 );
+
+// for illustration...  
+String msg;
+switch (category) {
+    case ZERO:
+        msg = "No files are selected.";
+        break;
+    case ONE:
+        msg = "Only a single file is selected.";
+        break;
+    ...
+    default:
+        msg = category + " files selected";
+}
+
+```
 
 
+Rules can also be obtained from their language and (optional) region Strings:
+```java
+// English, no region specified
+PluralRule englishCardinal = PluralRule.createOrDefault( "en", "", PluralRuleType.CARDINAL );
 
-# Building from source
+// British English
+PluralRule brCardinal = PluralRule.createOrDefault( "en", "GB", PluralRuleType.CARDINAL );
+```
+Note that for most languages, the region does not change the plural rules. In the above example,
+```englishCardinal``` is equivalent to ```brCardinal```. If a region is not present, or invalid,
+it is ignored and the language tag used to select the rule. However, if the language is not 
+available in the CLDR, the match will fail. For example:
 
-The included Gradle build file will download current (CLDR 37) source,
-generate the rules from the CLDR definitions,
-and create the release package (including source and 
+```java
+// valid
+Optional<PluralRule> rule = PluralRule.create( "en", "", PluralRuleType.CARDINAL );
+Optional<PluralRule> rule = PluralRule.create( "en", "GB", PluralRuleType.CARDINAL );
+
+// invalid region, however, this will return a rule for "en" as above
+Optional<PluralRule> rule = PluralRule.create( "en", "totally-made-up", PluralRuleType.CARDINAL );  
+assert rule.isPresent();
+    
+// invalid language; no rule exists.
+Optional<PluralRule> rule = PluralRule.create( "mylang", "", PluralRuleType.CARDINAL );
+assert rule.isEmpty();
+
+// if no rule exists, we could return the rule for the root locale, which is what 
+// PluralRule.createOrDefault() does in a single step. Or, we could do this:
+PluralRule knownRule = rule.orElse(PluralRule.createDefault(PluralRuleType.CARDINAL));
+assert (knownRule != null);
+
+```
+Caveat: the empty String ("") and String "root" are equivalent to Locale.ROOT. 
+
+If localization information cannot be obtained for a given language, ```createOrDefault()``` will return 
+the root Locale `Locale.ROOT`. With the root locale, `select()` always returns `PluralCategory.OTHER`,
+for both cardinals and ordinals. 
+
+
+If using Java 9+ Modules,
+```java
+module MyModule {
+    requires net.xyzsd.plurals;
+}
+```
+
+Example
+-------
+
+A simple, working example:
+
+```java
+import net.xyzsd.plurals.PluralCategory;
+import net.xyzsd.plurals.PluralRule;
+import net.xyzsd.plurals.PluralRuleType;
+
+public class prtest {
+
+    // first argument: language
+    // second argument: numeric value
+    public static void main(String[] args) {
+
+        if(args.length == 2) {
+            final String language = args[0];
+            final String value = args[1];
+
+            PluralRule rule = PluralRule.createOrDefault(language, "", PluralRuleType.CARDINAL);
+            System.out.printf("rule: '%s'\n", PluralRule.locale(rule));
+            System.out.printf("  rule type: %s\n", rule.pluralRuleType());
+            System.out.printf("  results of select(%s): %s\n",
+                    value,
+                    rule.select(value )
+                        .map( PluralCategory::name)
+                        .orElse( "Cannot parse value" )
+            );
+        } else {
+            System.out.println("Two arguments required!");
+            System.out.println("USAGE:");
+            System.out.println("  prtest [language] [value]");
+        }
+    }
+}
+
+```
+
+
+Download
+--------
+Download [the JAR][dlv1] or use via Maven:
+
+```xml
+<dependency>
+  <groupId>net.xyzsd.plurals</groupId>
+  <artifactId>cldr-plural-rules</artifactId>
+  <version>1.0</version>
+  <type>pom</type>
+</dependency>
+```
+or Gradle:
+```kotlin
+implementation("net.xyzsd.plurals:cldr-plural-rules:1.0")
+```
+
+Documentation
+-------------
+[Download][docs_dl] or [view online][docs].
+
+Building
+--------
+
+The included Gradle build file will download the current (JSON) CLDR definitions,
+generate the rules from the CLDR definitions, compile, and create the release package (including source and 
 documentation).
+
+Tests data is generated from the CLDR sample data.
+
+The build has several external dependencies, however the release has none.
+
+Internals
+---------
+The generated source file `PluralRules.java` contains the CDLR rules as Java source,
+and methods for selecting the correct rule for a given language. This generated class
+is fully exposed, and can be used directly instead of the `PluralRule` wrapper class.
+  
+
+License
+-------
+Copyright 2020, xyzsd
+
+Licensed under either of
+
+ * Apache License, Version 2.0
+   (see LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   (see LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+
+
+[dlv1]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/1.0/cldr-plural-rules-1.0.jar
+[docs_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/1.0/cldr-plural-rules-1.0-javadoc.jar
+[docs]: https://javadoc.io/doc/net.xyzsd.plurals/cldr-plural-rules
+[tr35]: https://unicode.org/reports/tr35/tr35-numbers.html
+[cldrPlurals]: https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
+[icu]: https://site.icu-project.org/
+[icu4j]: https://github.com/unicode-org/icu
+[icu67]: https://site.icu-project.org/download/67
+[cardinal]: https://www.dictionary.com/browse/cardinal-number
+[ordinal]: https://www.dictionary.com/browse/ordinal-number
