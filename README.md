@@ -5,11 +5,11 @@ This project extracts plural rules from CLDR data sets (as defined by Unicode [T
 and creates a library for using these rules which is independent from the [ICU][icu] library, specifically [ICU4J][icu4j].
 This project is compliant with the [CLDR Language Plural Rules][cldrPlurals].
 
-The generated library ([available here][dlv1]) is:
+The [generated library][jar_dl] is:
 * Current with Unicode 13/CLDR 37 ([ICU 67][icu67])
 * Contains all languages and regions as defined by ICU 67
-* Small (~ 24 kB .jar) 
-* Has no dependencies.
+* Simple, lightweight (~ 24 kB .jar)
+* Self-contained; no dependencies or data files
 
 Usage
 -----
@@ -73,12 +73,13 @@ PluralRule knownRule = rule.orElse(PluralRule.createDefault(PluralRuleType.CARDI
 assert (knownRule != null);
 
 ```
-Caveat: the empty String ("") and String "root" are equivalent to Locale.ROOT. 
+Caveat: the empty String (`""`) and String `"root"` are equivalent to `Locale.ROOT`. 
 
 If localization information cannot be obtained for a given language, ```createOrDefault()``` will return 
-the root Locale `Locale.ROOT`. With the root locale, `select()` always returns `PluralCategory.OTHER`,
-for both cardinals and ordinals. 
+the root Locale `Locale.ROOT`. 
 
+For the root locale, `select()` always returns `PluralCategory.OTHER`,
+for both cardinals and ordinals. 
 
 If using Java 9+ Modules,
 ```java
@@ -117,7 +118,7 @@ public class prtest {
                         .orElse( "Cannot parse value" )
             );
         } else {
-            System.out.println("Two arguments required!");
+            System.err.println("Two arguments required!");
             System.out.println("USAGE:");
             System.out.println("  prtest [language] [value]");
         }
@@ -129,19 +130,19 @@ public class prtest {
 
 Download
 --------
-Download [the JAR][dlv1] or use via Maven:
+Download [the JAR][jar_dl] or use via Maven:
 
 ```xml
 <dependency>
   <groupId>net.xyzsd.plurals</groupId>
   <artifactId>cldr-plural-rules</artifactId>
-  <version>1.0</version>
+  <version>1.0.1</version>
   <type>pom</type>
 </dependency>
 ```
 or Gradle:
 ```kotlin
-implementation("net.xyzsd.plurals:cldr-plural-rules:1.0")
+implementation("net.xyzsd.plurals:cldr-plural-rules:1.0.1")
 ```
 
 Documentation
@@ -181,9 +182,9 @@ at your option.
 
 
 
-[dlv1]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/1.0/cldr-plural-rules-1.0.jar
-[docs_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/1.0/cldr-plural-rules-1.0-javadoc.jar
-[docs]: https://javadoc.io/doc/net.xyzsd.plurals/cldr-plural-rules
+[jar_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/1.0.1/cldr-plural-rules-1.0.1.jar
+[docs_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/1.0.1/cldr-plural-rules-1.0.1-javadoc.jar
+[docs]: https://javadoc.io/doc/net.xyzsd.plurals/cldr-plural-rules/latest/index.html
 [tr35]: https://unicode.org/reports/tr35/tr35-numbers.html
 [cldrPlurals]: https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
 [icu]: https://site.icu-project.org/
