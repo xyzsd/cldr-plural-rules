@@ -6,10 +6,10 @@ and creates a library for using these rules which is independent from the [ICU][
 This project is compliant with the [CLDR Language Plural Rules][cldrPlurals].
 
 The [generated library][jar_dl] is:
-* Current with Unicode 13/CLDR 37 ([ICU 67][icu67])
-* Contains all languages and regions as defined by ICU 67
-* Simple, lightweight (~ 24 kB .jar)
-* Self-contained; no dependencies or data files
+* Current with Unicode 13/[CLDR 39][cldr_rel] (Current as of April 7, 2021)
+* Contains all languages and regions as defined in CLDR v39
+* Simple, lightweight (~ 25 kB .jar)
+* Self-contained; no additional dependencies or data files
 
 Usage
 -----
@@ -136,7 +136,7 @@ Download [the JAR][jar_dl] or use via Maven:
 <dependency>
   <groupId>net.xyzsd.plurals</groupId>
   <artifactId>cldr-plural-rules</artifactId>
-  <version>1.0.1</version>
+  <version>2.0</version>
   <type>pom</type>
 </dependency>
 ```
@@ -169,7 +169,7 @@ is fully exposed, and can be used directly instead of the `PluralRule` wrapper c
 
 License
 -------
-Copyright 2020, xyzsd
+Copyright 2020, 2021 xyzsd
 
 Licensed under either of
 
@@ -182,13 +182,15 @@ at your option.
 
 
 
-[jar_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/1.0.1/cldr-plural-rules-1.0.1.jar
-[docs_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/1.0.1/cldr-plural-rules-1.0.1-javadoc.jar
+[jar_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/2.0/cldr-plural-rules-1.0.1.jar
+[docs_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/2.0/cldr-plural-rules-1.0.1-javadoc.jar
 [docs]: https://javadoc.io/doc/net.xyzsd.plurals/cldr-plural-rules/latest/index.html
 [tr35]: https://unicode.org/reports/tr35/tr35-numbers.html
 [cldrPlurals]: https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
 [icu]: https://site.icu-project.org/
 [icu4j]: https://github.com/unicode-org/icu
-[icu67]: https://site.icu-project.org/download/67
+[cldr_rel]: http://cldr.unicode.org/index/downloads/cldr-39
 [cardinal]: https://www.dictionary.com/browse/cardinal-number
 [ordinal]: https://www.dictionary.com/browse/ordinal-number
+
+[latest]: https://github.com/xyzsd/cldr-plural-rules/releases/latest
