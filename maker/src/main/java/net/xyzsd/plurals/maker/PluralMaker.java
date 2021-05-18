@@ -50,6 +50,8 @@ public class PluralMaker {
     static final String CARDINAL_RULE_PREFIX = "_C_RULE_";
     static final String ORDINAL_RULE_PREFIX = "_O_RULE_";
 
+
+
     static List<String> ruleToSamples(String ruleIn) {
         final int idx = ruleIn.indexOf( '@' );
         if (idx < 0) {
@@ -60,8 +62,31 @@ public class PluralMaker {
                 .map( String::trim )
                 .filter( Predicate.not( String::isEmpty ) )
                 .filter( Predicate.not( "\u2026"::equals ) )         // \u2026 : "…" horizontal ellipsis
+                .filter( Predicate.not( PluralMaker::containsSuppressedExponent ) )
                 .flatMap( PluralMaker::expand )
                 .collect( toList() );
+    }
+
+    static List<String> ruleToCompactSamples(String ruleIn) {
+        final int idx = ruleIn.indexOf( '@' );
+        if (idx < 0) {
+            return List.of();
+        }
+
+        final List<String> collect = Arrays.stream( ruleIn.substring( idx ).split( "@integer|@decimal|," ) )
+                .map( String::trim )
+                .filter( PluralMaker::containsSuppressedExponent )
+                .map( s -> s.replace( 'e', 'c' ) )
+                .collect( toList() );
+
+        return collect;
+    }
+
+
+
+    // compact form can be 'e' (per spec) or 'c' (actual) .... currently 'c' is used
+    static boolean containsSuppressedExponent(final String in) {
+        return (in.indexOf( 'e' ) > 0 || in.indexOf( 'c' ) > 0);
     }
 
     static Stream<String> expand(String s) {
@@ -85,22 +110,60 @@ public class PluralMaker {
         ).map( BigDecimal::toPlainString );
     }
 
-    static Map<PluralCategory, List<String>> rulesetToSamples(Ruleset ruleset) {
+
+    static Map<PluralCategory, List<String>> rulesetToSamples(Ruleset ruleset,
+                                                              Function<String, List<String>> function) {
         return ruleset.rawRules.entrySet().stream()
                 .collect( toMap(
                         Map.Entry::getKey,
-                        entry -> ruleToSamples( entry.getValue() )
+                        entry -> function.apply( entry.getValue() )
                 ) );
     }
 
     // pass this method a: final Map<String, Ruleset> ordinals = cldrSupplemental.supplemental.ordinals
     // the resulting structure is the test data for ordinals or cardinals
     static Map<String, Map<PluralCategory, List<String>>> makeTests(final Map<String, Ruleset> rulesetMap) {
+
+
         return rulesetMap.entrySet().stream()
                 .collect( toMap(
                         Map.Entry::getKey,
-                        entry -> rulesetToSamples( entry.getValue() )
+                        entry -> rulesetToSamples(
+                                entry.getValue(),
+                                PluralMaker::ruleToSamples
+                        )
                 ) );
+    }
+
+    static Map<String, Map<PluralCategory, List<String>>> makeCompactTests(final Map<String, Ruleset> rulesetMap) {
+        // this should be refactored likely using map.merge() instead
+        Map<String, Map<PluralCategory, List<String>>> compactTests = rulesetMap.entrySet().stream()
+                .collect( toMap(
+                        Map.Entry::getKey,
+                        entry -> rulesetToSamples(
+                                entry.getValue(),
+                                PluralMaker::ruleToCompactSamples
+                        )
+                ) );
+
+        // compact forms are uncommon. if an entry has no compact forms,
+        // eliminate it from the map.
+        // e.g.: "ksh":{"ZERO":[],"ONE":[],"OTHER":[]}
+        //  "fr":{"ONE":[],"MANY":["1c6","2c6","3c6","4c6","5c6","6c6","1.0000001c6","1.1c6","2.0000001c6","2.1c6","3.0000001c6","3.1c6"],"OTHER":["1c3","2c3","3c3","4c3","5c3","6c3","1.0001c3","1.1c3","2.0001c3","2.1c3","3.0001c3","3.1c3"]}
+        // e.g.: we would eliminate 'ksh' entirely, and fr:"ONE' entry
+        Map<String, Map<PluralCategory, List<String>>> filtered = new HashMap<>();
+        for(Map.Entry<String, Map<PluralCategory, List<String>>> entry : compactTests.entrySet()) {
+            final Map<PluralCategory, List<String>> pcMap = entry.getValue();
+
+            if(!pcMap.values().stream().allMatch( List::isEmpty )) {
+                // at least one nonempty compact value
+                final Map<PluralCategory, List<String>> collect = pcMap.entrySet().stream()
+                        .filter( x -> !x.getValue().isEmpty() )
+                        .collect( toMap( Map.Entry::getKey, Map.Entry::getValue ) );
+                filtered.put(entry.getKey(), collect);
+            }
+        }
+        return filtered;
     }
 
     // for json
@@ -150,9 +213,9 @@ public class PluralMaker {
         @FromJson
         PluralCategory fromJson(String s) {
             // try general case (needed for test data), then CLDR-specific
-            return PluralCategory.from( s )
-                    .or( () -> PluralCategory.from(
-                            s.substring( s.lastIndexOf( '-' ) + 1 ).toUpperCase( Locale.ENGLISH ) )
+            return PluralCategory.ifPresentIgnoreCase( s )
+                    .or( () -> PluralCategory.ifPresentIgnoreCase(
+                            s.substring( s.lastIndexOf( '-' ) + 1 ) )
                     )
                     .orElseThrow();
         }
@@ -259,7 +322,7 @@ public class PluralMaker {
 
             // modulo extractor. Replace with variable name; we can re-substitute the name later OR define as a
             // constant expression prior to using the value.
-            rule = Pattern.compile( "([nivwft]) % (\\d+)" ).matcher( rule ).replaceAll( o -> {
+            rule = Pattern.compile( "([nivwfte]) % (\\d+)" ).matcher( rule ).replaceAll( o -> {
                 String name = "mod_" + o.group( 1 ) + o.group( 2 );
                 String expr = "(op." + o.group( 1 ) + " % " + o.group( 2 ) + ")";
                 modMap.put( name, expr );
@@ -270,7 +333,7 @@ public class PluralMaker {
             //      left hand side (LHS) is a variable OR modulo temp name (see above: e.g., 'mod_i1000')
             //      right hand side (RHS) is a set, range, or mix of sets and ranges
             // this pattern is currently dependent on specific whitespace
-            rule = Pattern.compile( "([nivwft]|mod_[nivwft]\\d+) (=|!=) (\\d+[.,][.,\\d]+)" ).matcher( rule ).replaceAll( m -> {
+            rule = Pattern.compile( "([nivwfte]|mod_[nivwfte]\\d+) (=|!=) (\\d+[.,][.,\\d]+)" ).matcher( rule ).replaceAll( m -> {
                 final String lhs = m.group( 1 ).startsWith( "mod_" ) ? m.group( 1 ) : "op." + m.group( 1 );
                 final String eq = m.group( 2 ).startsWith( "!" ) ? "!=" : "==";
                 final String[] rhs = m.group( 3 ).split( "," );
@@ -307,8 +370,8 @@ public class PluralMaker {
             } );
 
             // fixup variables.
-            rule = rule.replaceAll( "^([nivwft])", "op.$1" );
-            rule = rule.replaceAll( "\\s([nivwft])", " op.$1" );
+            rule = rule.replaceAll( "^([nivwfte])", "op.$1" );
+            rule = rule.replaceAll( "\\s([nivwfte])", " op.$1" );
 
             rule = rule.replace( " = ", " == " );
             rule = rule.replace( " or ", " || " );
@@ -489,8 +552,10 @@ public class PluralMaker {
                 .add( new PluralCategoryAdapter() )
                 .build();
 
-        final ParameterizedType parameterizedType = Types.newParameterizedType( Map.class, String.class,
-                Map.class, PluralCategory.class, List.class, String.class );
+        final ParameterizedType parameterizedType = Types.newParameterizedType(
+                Map.class, String.class,
+                Map.class, PluralCategory.class, List.class, String.class
+        );
 
         // easier than dealing with OKIO BufferedSource/Sink
         Files.writeString(
@@ -508,9 +573,10 @@ public class PluralMaker {
                         .withUnknownFallback( null ) )
                 .build();
 
-        // issue: map keys (for embedded map) NOT read in as PluralCategory by Moshi, but as String....
-        final ParameterizedType parameterizedType = Types.newParameterizedType( Map.class, String.class,
-                Map.class, PluralCategory.class, List.class, String.class );
+        // issue: map keys (for embedded map) NOT read in as PluralCategory, but as String....
+        final ParameterizedType parameterizedType = Types.newParameterizedType(
+                Map.class, String.class,
+                        Map.class, PluralCategory.class, List.class, String.class );
 
         JsonAdapter<Map<String, Map<PluralCategory, List<String>>>> adapter = moshi.adapter( parameterizedType );
 
@@ -530,11 +596,11 @@ public class PluralMaker {
     public static void main(String[] args) throws Exception {
         if (args.length != 4) {
             System.err.printf( "ERROR: 4 arguments required (%d supplied)\n", args.length );
-            System.out.println( "Required arguments:" );
-            System.out.println( "  (1) CLDR cardinal plural JSON" );
-            System.out.println( "  (2) CLDR ordinal plural JSON" );
-            System.out.println( "  (3) test data output path (directory)" );
-            System.out.println( "  (3) generated java source output path (directory)" );
+            System.err.println( "Required arguments:" );
+            System.err.println( "  (1) CLDR cardinal plural JSON" );
+            System.err.println( "  (2) CLDR ordinal plural JSON" );
+            System.err.println( "  (3) test data output path (directory)" );
+            System.err.println( "  (3) generated java source output path (directory)" );
             System.exit( 1 );
         }
 
@@ -574,9 +640,11 @@ public class PluralMaker {
         writeTestJSON( makeTests( cldrSupplementalCardinal.supplemental.cardinals ),
                 testPath.resolve( Path.of( "cardinal_samples.json" ) ) );
 
-
         writeTestJSON( makeTests( cldrSupplementalOrdinal.supplemental.ordinals ),
                 testPath.resolve( Path.of( "ordinal_samples.json" ) ) );
+
+        writeTestJSON( makeCompactTests( cldrSupplementalCardinal.supplemental.cardinals ),
+                testPath.resolve( Path.of( "compact_cardinal_samples.json" ) ) );
 
 
         MethodSpec selectCardinal = MethodSpec.methodBuilder( "selectCardinal" )

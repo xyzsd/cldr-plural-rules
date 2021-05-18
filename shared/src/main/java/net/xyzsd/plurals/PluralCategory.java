@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 /**
  * Language-dependent plural forms, per CLDR specifications.
- *
  */
 public enum PluralCategory {
     ZERO,
@@ -29,21 +28,41 @@ public enum PluralCategory {
     OTHER;
 
 
-    private static final Map<String,PluralCategory> map = Arrays.stream(values())
-            .collect( Collectors.toMap(Enum::toString, Function.identity()));
+    private static final Map<String, PluralCategory> map = Arrays.stream( values() )
+            .collect( Collectors.toMap( Enum::toString, Function.identity() ) );
 
     /**
      * Return the constant that (exactly) matches the input String.
      * Does not throw exceptions, as valueOf() does.
-     * <p>
-     *     To perform a case-insensitive match, use {@code toUpperCase(Locale.ENGLISH)} as the input.
-     * </p>
      *
      * @param s case-sensitive input to match
      * @return {@code Optional<PluralCategory>} or an empty {@code Optional}
      */
-    public static Optional<PluralCategory> from(final String s) {
-        return Optional.ofNullable( map.get(s) );
+    @SuppressWarnings("unused")
+    public static Optional<PluralCategory> ifPresent(final String s) {
+        return Optional.ofNullable( map.get( s ) );
     }
 
+
+    /**
+     * Return the constant that matches the input String, via a case-insensitive comparison.
+     * Does not throw exceptions, as valueOf() does.
+     *
+     * @param s case-sensitive input to match
+     * @return {@code Optional<PluralCategory>} or an empty {@code Optional}
+     */
+    @SuppressWarnings("unused")
+    public static Optional<PluralCategory> ifPresentIgnoreCase(final String s) {
+        final PluralCategory pc = map.get( s );
+        if (pc != null) {
+            return Optional.of(pc);
+        } else {
+            for (final PluralCategory iter : values()) {
+                if (iter.name().equalsIgnoreCase( s )) {
+                    return Optional.of( iter );
+                }
+            }
+        }
+        return Optional.empty();
+    }
 }

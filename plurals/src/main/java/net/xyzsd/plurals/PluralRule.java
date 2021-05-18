@@ -13,6 +13,7 @@ package net.xyzsd.plurals;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,25 +30,25 @@ import java.util.function.Function;
  * or {@code createOrDefault()} can be used (less error-prone).
  * </p>
  * <p>
- *     For example:
+ * For example:
  * {@code
- *      PluralRule rule = PluralRule.createOrDefault(Locale.ENGLISH, PluralRuleType.ORDINAL);
- *      assert (rule.select(1) == PluralCategory.ONE);                  // e.g., "1 day"
- *      assert (rule.select(10) == PluralCategory.OTHER);               // e.g., "10 days"
- *      assert (rule.select("1100.00") == PluralCategory.OTHER);        // e.g., "1100.00 days"
- *
- *      PluralRule rule = PluralRule.createOrDefault(Locale.ENGLISH, PluralRuleType.CARDINAL);
- *      assert (rule.select(1) == PluralCategory.ONE);              // e.g, "1st"   use 'st' suffix
- *      assert (rule.select(2) == PluralCategory.TWO);              // e.g., "2nd"  use 'nd' suffix
- *      assert (rule.select(3) == PluralCategory.FEW);              // e.g., "3rd"  use 'rd' suffix
- *      assert (rule.select(4) == PluralCategory.OTHER);            // e.g., "4th"  use 'th' suffix
- *      assert (rule.select(43) == PluralCategory.FEW);             // e.g., "43rd"
- *      assert (rule.select(50) == PluralCategory.OTHER);           // e.g., "50th"
+ * PluralRule rule = PluralRule.createOrDefault(Locale.ENGLISH, PluralRuleType.ORDINAL);
+ * assert (rule.select(1) == PluralCategory.ONE);                  // e.g., "1 day"
+ * assert (rule.select(10) == PluralCategory.OTHER);               // e.g., "10 days"
+ * assert (rule.select("1100.00") == PluralCategory.OTHER);        // e.g., "1100.00 days"
+ * <p>
+ * PluralRule rule = PluralRule.createOrDefault(Locale.ENGLISH, PluralRuleType.CARDINAL);
+ * assert (rule.select(1) == PluralCategory.ONE);              // e.g, "1st"   use 'st' suffix
+ * assert (rule.select(2) == PluralCategory.TWO);              // e.g., "2nd"  use 'nd' suffix
+ * assert (rule.select(3) == PluralCategory.FEW);              // e.g., "3rd"  use 'rd' suffix
+ * assert (rule.select(4) == PluralCategory.OTHER);            // e.g., "4th"  use 'th' suffix
+ * assert (rule.select(43) == PluralCategory.FEW);             // e.g., "43rd"
+ * assert (rule.select(50) == PluralCategory.OTHER);           // e.g., "50th"
  * }
  * </p>
  * <p>
- *     The PluralCategory returned determines how subsequent localization logic then handles the number, ranking,
- *     or quantity, which is locale-dependent.
+ * The PluralCategory returned determines how subsequent localization logic then handles the number, ranking,
+ * or quantity, which is locale-dependent.
  * </p>
  * <p>
  * When matching a language, the empty String "" and String "root" are equivalent to Locale.ROOT.
@@ -55,9 +56,6 @@ import java.util.function.Function;
  * using cardinal rules; many languages do not have specific cardinal rules.
  * </p>
  */
-// add caveats for "" and "root"
-// and if unmatched, particularly for ordinals
-// basic usage
 
 public final class PluralRule {
 
@@ -92,6 +90,7 @@ public final class PluralRule {
      * For example, both "en-US" and "en-GB" will return a Locale with only the language "en" specified,
      * since the region (in the case of English) is not relevant to plural selection.
      * </p>
+     *
      * @param pr PluralRule for which we should determine the Locale. Null not allowed.
      * @return Locale for this Plural rule. Never null.
      */
@@ -184,21 +183,75 @@ public final class PluralRule {
     @CheckReturnValue
     @Nonnull
     public PluralCategory select(BigDecimal value) {
-        Objects.requireNonNull( value );
         return rule.apply( PluralOperand.from( value ) );
     }
 
+
     /**
-     * Determine the PluralCategory for the given {@code long} value.
+     * Determine the PluralCategory for the given Number.
      *
-     * @param value value as a long
+     * <p>
+     * BigIntegers and BigDecimal types are handled specially.
+     * All other Number types will be handled as a double.
+     * </p>
+     *
+     * @param input value as a Number
      * @return PluralCategory for the given value.
      */
     @CheckReturnValue
     @Nonnull
-    public PluralCategory select(long value) {
-        return rule.apply( PluralOperand.from( value ) );
+    public PluralCategory selectNumber(final Number input) {
+        if (input instanceof BigDecimal) {
+            return rule.apply( PluralOperand.from( (BigDecimal) input ) );
+        } else if (input instanceof BigInteger) {
+            return rule.apply( PluralOperand.from(
+                    new BigDecimal( (BigInteger) input ) )
+            );
+        } else {
+            return rule.apply( PluralOperand.from( input.doubleValue() ) );
+        }
     }
+
+    /**
+     * Determine the PluralCategory for the given "compact" BigDecimal
+     *
+     * @param value              input value
+     * @param suppressedExponent suppressed exponent (range: 0-21)
+     * @return PluralOperand
+     */
+    @CheckReturnValue
+    @Nonnull
+    public PluralCategory selectCompact(final BigDecimal value, final int suppressedExponent) {
+        return rule.apply( PluralOperand.from( value, suppressedExponent ) );
+    }
+
+
+    /**
+     * Determine the PluralCategory for the given "compact" long
+     *
+     * @param value              input value
+     * @param suppressedExponent suppressed exponent (range: 0-21)
+     * @return PluralOperand
+     */
+    @CheckReturnValue
+    @Nonnull
+    public PluralCategory selectCompact(final long value, final int suppressedExponent) {
+        return rule.apply( PluralOperand.from( value, suppressedExponent ) );
+    }
+
+    /**
+     * Determine the PluralCategory for the given "compact" double
+     *
+     * @param value              input value
+     * @param suppressedExponent suppressed exponent (range: 0-21)
+     * @return PluralOperand
+     */
+    @CheckReturnValue
+    @Nonnull
+    public PluralCategory selectCompact(final double value, final int suppressedExponent) {
+        return rule.apply( PluralOperand.from( value, suppressedExponent ) );
+    }
+
 
     /**
      * Determine the PluralCategory for the given {@code long} value.
@@ -209,7 +262,10 @@ public final class PluralRule {
     @CheckReturnValue
     @Nonnull
     public PluralCategory select(double value) {
-        return rule.apply( PluralOperand.from( value ) );
+        if (Double.isFinite( value )) {
+            return rule.apply( PluralOperand.from( value ) );
+        }
+        return PluralCategory.OTHER;
     }
 
 

@@ -1,5 +1,0 @@
-rootProject.name = 'cldr-plural-rules'
-include 'shared'
-include 'plurals'
-include 'maker'
-

@@ -11,8 +11,8 @@
 package net.xyzsd.plurals;
 
 import net.xyzsd.plurals.maker.PluralMaker;
-import net.xyzsd.plurals.PluralRule;
-import net.xyzsd.plurals.PluralRules;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,11 +21,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
 
-
-class PluralRuleTest {
+public class PluralRuleTest {
 
 
     // basic tests: cardinal
@@ -69,7 +66,6 @@ class PluralRuleTest {
 
 
 
-
     @Test
     void testDefaultRule() {
         PluralRule rule = PluralRule.createDefault( PluralRuleType.CARDINAL );
@@ -87,7 +83,7 @@ class PluralRuleTest {
         final URI resource = this.getClass().getResource( "/cardinal_samples.json" ).toURI();
         Map<String, Map<PluralCategory, List<String>>> cardinalSamples = PluralMaker.readTestJSON(
                 Path.of( resource ) );
-        System.out.printf("Cardinals: %d", cardinalSamples.size());
+        System.out.printf("Cardinals: %d\n", cardinalSamples.size());
         testSamples( PluralRuleType.CARDINAL, cardinalSamples );
     }
 
@@ -96,8 +92,17 @@ class PluralRuleTest {
         final URI resource = this.getClass().getResource( "/ordinal_samples.json" ).toURI();
         Map<String, Map<PluralCategory, List<String>>> ordinalSamples = PluralMaker.readTestJSON(
                 Path.of( resource ) );
-        System.out.printf("Ordinals: %d", ordinalSamples.size());
+        System.out.printf("Ordinals: %d\n", ordinalSamples.size());
         testSamples( PluralRuleType.ORDINAL, ordinalSamples );
+    }
+
+    @Test
+    void testCompactSamples() throws IOException, URISyntaxException {
+        final URI resource = this.getClass().getResource( "/compact_cardinal_samples.json" ).toURI();
+        Map<String, Map<PluralCategory, List<String>>> cardinalCompactSamples = PluralMaker.readTestJSON(
+                Path.of( resource ) );
+        System.out.printf("Compact Cardinals: %d\n", cardinalCompactSamples.size());
+        testCompactSamples( PluralRuleType.CARDINAL, cardinalCompactSamples );
     }
 
 
@@ -108,9 +113,12 @@ class PluralRuleTest {
         StringBuilder errors = new StringBuilder();
         for( Map.Entry<String, Map<PluralCategory, List<String>>> langEntry : allSamples.entrySet()) {
             final String lang = langEntry.getKey();
-            // <?,..> because Moshi is not reading in PluralCategory enums correctly.. (why?)
+
+            // <?,..> because we are not reading in PluralCategory enums correctly.. (why?)
+            // they are ending up as Strings, and not converted to PluralCategory
             for(Map.Entry<?, List<String>> entry : langEntry.getValue().entrySet()) {
-                //final PluralCategory category = entry.getKey();     // issue: fails w/ClassCastException: JSON reader issue (?)
+                // assuming Map.Entry<PluralCategory, List<String>> ... :
+                //   final PluralCategory category = entry.getKey();     // issue: fails w/ClassCastException
                 final PluralCategory category = PluralCategory.valueOf( (String) entry.getKey() );
 
                 final List<String> samples = entry.getValue();
@@ -134,5 +142,53 @@ class PluralRuleTest {
         Assertions.assertEquals( "" , errors.toString());
     }
 
+    // compact cardinals
+    void testCompactSamples(PluralRuleType type, Map<String, Map<PluralCategory, List<String>>> allSamples) {
+        // copypasta of above... with same issues (see above!)
+
+        StringBuilder errors = new StringBuilder();
+        for( Map.Entry<String, Map<PluralCategory, List<String>>> langEntry : allSamples.entrySet()) {
+            final String lang = langEntry.getKey();
+            for(Map.Entry<?, List<String>> entry : langEntry.getValue().entrySet()) {
+                final PluralCategory category = PluralCategory.valueOf( (String) entry.getKey() );
+
+                final List<String> samples = entry.getValue();
+
+                // we only test languages that have rules
+                PluralRule pluralRule = PluralRule.create(
+                        PluralMaker.baseLanguage( lang ),
+                        PluralMaker.extractRegion( lang ), type ).orElseThrow(
+                        () -> new IllegalStateException("No rule for: "+lang));
+
+                for(String sample : samples) {
+                    final PluralOperand operand = parseCompact(sample);
+                    final PluralCategory result = pluralRule.select( operand );
+                    if(!category.equals(result)) {
+                        errors.append(String.format("Failure for '%s': '%s' sample '%s' (error value:'%s','%s')\n",
+                                lang, category, sample, result, operand));
+
+                    }
+                }
+            }
+        }
+
+        Assertions.assertEquals( "" , errors.toString());
+    }
+
+
+    private PluralOperand parseCompact(final String in) {
+        int split = in.indexOf( 'c' );
+        if(split <= 0) {
+            throw new IllegalStateException("Invalid compact form : "+in);
+        }
+        String left = in.substring( 0, split );
+        final int exp = Integer.parseInt( in.substring( split+1 ) );
+
+        if(left.indexOf( '.' ) >= 0) {
+            return PluralOperand.from( Double.parseDouble( left ), exp );
+        } else {
+            return PluralOperand.from( Integer.parseInt(left), exp );
+        }
+    }
 
 }
