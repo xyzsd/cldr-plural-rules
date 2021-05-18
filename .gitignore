@@ -15,7 +15,7 @@ target
 *.log
 pm.xml.*
 
-.idea
+.idea.old
 *.iml
 *.ipr
 *.iws
