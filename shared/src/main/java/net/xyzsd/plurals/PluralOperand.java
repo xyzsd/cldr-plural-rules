@@ -11,6 +11,7 @@
 package net.xyzsd.plurals;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -34,18 +35,18 @@ import java.util.Optional;
  */
 public final class PluralOperand {
 
+    // now made public for introspection
     // see: http://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
-    // deliberately package-private for now
-    final double n; // absolute value of input (integer and decimals)
-    final long i;   // integer digits of n (also always >= 0)
+    public final double n; // absolute value of input (integer and decimals)
+    public final long i;   // integer digits of n (also always >= 0)
 
-    final int v;    // count of visible fraction digits WITH trailing zeros
-    final int w;    // count of visible fraction digits WITHOUT trailing zeros
+    public final int v;    // count of visible fraction digits WITH trailing zeros
+    public final int w;    // count of visible fraction digits WITHOUT trailing zeros
 
-    final int f;    // visible fraction digits WITH trailing zeros
-    final int t;    // visible fraction digits WITHOUT trailing zeros
+    public final int f;    // visible fraction digits WITH trailing zeros
+    public final int t;    // visible fraction digits WITHOUT trailing zeros
 
-    final int e;    // suppressed exponent [added in CLDR 38], synonym for 'c' (!)
+    public final int e;    // suppressed exponent [added in CLDR 38], synonym for 'c' (!)
 
 
     private PluralOperand(double n, long i, int v, int w, int f, int t, int e) {
@@ -114,6 +115,24 @@ public final class PluralOperand {
         return from(input, 0);
     }
 
+    /**
+     * Create a PluralOperand from a {@code long} or {@code int}.
+     *
+     * @param input integral value
+     * @return PluralOperand
+     */
+    public static PluralOperand from(final long input) {
+        // This method is necessary, because converting an int/long to a double
+        // will result in a '.0' being added, so v=1 instead of v=0.
+        // e.g.: from(1) : v = 0
+        // from((double) 1) : v = 1 (because double value is '1.0')
+        final long absIn = (input != Long.MIN_VALUE) ? Math.abs(input) : Long.MAX_VALUE;
+        return new PluralOperand(
+                (double) absIn,
+                absIn,
+                0, 0, 0, 0, 0
+        );
+    }
 
     /**
      * Create a PluralOperand from a {@code double}.
@@ -129,6 +148,34 @@ public final class PluralOperand {
         return from(input, 0);
     }
 
+
+    /**
+     * Create a PluralOperand from a given {@code Number} type.
+     * <p>
+     *     This selects the most specific type:
+     *     <ul>
+     *         <li>BigInteger, BigDecimal: handled using BigDecimal type</li>
+     *         <li>Double, Float: handled using double type</li>
+     *         <li>all others (long, int, short, byte): handled using long type</li>
+     *     </ul>
+     *     Null values will result in a NullPointerException
+     * </p>
+     * @param input Number
+     * @return PluralOperand
+     */
+    public static PluralOperand from(final Number input) {
+        Objects.requireNonNull(input);
+        if (input instanceof BigDecimal) {
+            return from((BigDecimal) input);
+        } else if (input instanceof BigInteger) {
+            return from( new BigDecimal( ((BigInteger) input) ) );
+        } else if (input instanceof Double || input instanceof Float) {
+            return from( input.doubleValue() );
+        } else {
+            // everything else can be handled as an integral type
+            return from( input.longValue() );
+        }
+    }
 
     /**
      * Explicitly set suppressedExponent for Compact format numbers.

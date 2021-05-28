@@ -162,6 +162,7 @@ public final class PluralRule {
      *
      * @param value Numeric value, as a String
      * @return Optional containing the PluralCategory. Empty if String parsing fails.
+     * @throws NullPointerException if value is null
      */
     @CheckReturnValue
     @Nonnull
@@ -170,46 +171,38 @@ public final class PluralRule {
         return PluralOperand.from( value ).map( rule );
     }
 
-    /**
-     * Determine the PluralCategory for the given BigDecimal.
-     * <p>
-     * Using String or BigDecimal PluralOperands permits the retention of
-     * precision (trailing zeros), which can affect localization.
-     * </p>
-     *
-     * @param value value as a BigDecimal
-     * @return PluralCategory for the given value.
-     */
-    @CheckReturnValue
-    @Nonnull
-    public PluralCategory select(BigDecimal value) {
-        return rule.apply( PluralOperand.from( value ) );
-    }
-
 
     /**
      * Determine the PluralCategory for the given Number.
      *
      * <p>
-     * BigIntegers and BigDecimal types are handled specially.
-     * All other Number types will be handled as a double.
+     * Handled as per PluralOperand.from(Number). Using BigDecimal permits the retention of
+     * precision (trailing zeros), unlike doubles or floats, which can affect localization.
      * </p>
      *
-     * @param input value as a Number
+     * @param value value as a Number
      * @return PluralCategory for the given value.
+     * @throws NullPointerException if value is null
      */
     @CheckReturnValue
     @Nonnull
-    public PluralCategory selectNumber(final Number input) {
-        if (input instanceof BigDecimal) {
-            return rule.apply( PluralOperand.from( (BigDecimal) input ) );
-        } else if (input instanceof BigInteger) {
-            return rule.apply( PluralOperand.from(
-                    new BigDecimal( (BigInteger) input ) )
-            );
-        } else {
-            return rule.apply( PluralOperand.from( input.doubleValue() ) );
-        }
+    public PluralCategory select(final Number value) {
+        Objects.requireNonNull( value );
+        return rule.apply( PluralOperand.from( value ) );
+    }
+
+    /**
+     * Determine the PluralCategory for the given BigDecimal.
+     *
+     * @param value value as a BigDecimal
+     * @return PluralCategory for the given value.
+     * @throws NullPointerException if value is null
+     */
+    @CheckReturnValue
+    @Nonnull
+    public PluralCategory select(BigDecimal value) {
+        Objects.requireNonNull( value );
+        return rule.apply( PluralOperand.from( value ) );
     }
 
     /**
@@ -218,10 +211,12 @@ public final class PluralRule {
      * @param value              input value
      * @param suppressedExponent suppressed exponent (range: 0-21)
      * @return PluralOperand
+     * @throws NullPointerException if value is null
      */
     @CheckReturnValue
     @Nonnull
     public PluralCategory selectCompact(final BigDecimal value, final int suppressedExponent) {
+        Objects.requireNonNull( value );
         return rule.apply( PluralOperand.from( value, suppressedExponent ) );
     }
 
@@ -254,9 +249,12 @@ public final class PluralRule {
 
 
     /**
-     * Determine the PluralCategory for the given {@code long} value.
+     * Determine the PluralCategory for the given {@code double} value.
+     * <p>
+     * Non-finite values will return {@code PluralCategory.OTHER}.
+     * </p>
      *
-     * @param value value as a double
+     * @param value value as a {@code double}
      * @return PluralCategory for the given value.
      */
     @CheckReturnValue
@@ -266,6 +264,19 @@ public final class PluralRule {
             return rule.apply( PluralOperand.from( value ) );
         }
         return PluralCategory.OTHER;
+    }
+
+
+    /**
+     * Determine the PluralCategory for the given {@code long} value.
+     *
+     * @param value value as a {@code long}
+     * @return PluralCategory for the given value.
+     */
+    @CheckReturnValue
+    @Nonnull
+    public PluralCategory select(long value) {
+        return rule.apply( PluralOperand.from( value ) );
     }
 
 

@@ -1,7 +1,7 @@
 // NEW build file
 // a mix of various kotlin conventions and styles
 // some dependencies are implicit, unfortunately, and that will have to be remedied
-//
+// ISSUE: POM not created in root project...but may be after maven-local-publish.....
 
 plugins {
     id("java-library")
@@ -11,7 +11,7 @@ plugins {
 
 allprojects {
     group = "net.xyzsd.plurals"
-    version = "2.0"
+    version = "3.0"
     // use 'rootProject.name' (from settings.gradle.kts) for base name
 
     repositories {
@@ -174,6 +174,7 @@ configure<PublishingExtension> {
                     url.set("")
                 }
             }
+
         }
     }
 
@@ -197,3 +198,16 @@ configure<SigningExtension> {
     val publishing: PublishingExtension by project
     sign(publishing.publications)
 }
+
+/*
+tasks.withType<PublishToMavenLocal>().configureEach {
+    doLast {
+        copy {
+           // from("${buildDir}/publications/main/pom-default.xml")
+            to("${buildDir}/libs/${project.name}-${version}.pom")
+        }
+    }
+}
+
+ */
+

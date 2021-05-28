@@ -24,6 +24,55 @@ import java.util.Map;
 
 public class PluralRuleTest {
 
+    // todo: move this test to 'shared'
+    @Test
+    void operandTests() {
+        PluralOperand op;
+        op = PluralOperand.from(1);
+        Assertions.assertEquals( 1.0d, op.n);
+        Assertions.assertEquals( 1, op.i);
+        Assertions.assertEquals( 0, op.v);
+        Assertions.assertEquals( 0, op.w);
+        Assertions.assertEquals( 0, op.f);
+        Assertions.assertEquals( 0, op.t);
+        Assertions.assertEquals( 0, op.e);
+
+        op = PluralOperand.from(1.0d);
+        Assertions.assertEquals( 1.0d, op.n);
+        Assertions.assertEquals( 1, op.i);
+        Assertions.assertEquals( 1, op.v);
+        Assertions.assertEquals( 0, op.w);
+        Assertions.assertEquals( 0, op.f);
+        Assertions.assertEquals( 0, op.t);
+        Assertions.assertEquals( 0, op.e);
+
+        op = PluralOperand.from("1.0").orElseThrow();
+        Assertions.assertEquals( 1.0d, op.n);
+        Assertions.assertEquals( 1, op.i);
+        Assertions.assertEquals( 1, op.v);
+        Assertions.assertEquals( 0, op.w);
+        Assertions.assertEquals( 0, op.f);
+        Assertions.assertEquals( 0, op.t);
+        Assertions.assertEquals( 0, op.e);
+
+        op = PluralOperand.from("1000.000").orElseThrow();
+        Assertions.assertEquals( 1000.0d, op.n);
+        Assertions.assertEquals( 1000, op.i);
+        Assertions.assertEquals( 3, op.v);
+        Assertions.assertEquals( 0, op.w);
+        Assertions.assertEquals( 0, op.f);
+        Assertions.assertEquals( 0, op.t);
+        Assertions.assertEquals( 0, op.e);
+
+        op = PluralOperand.from("1000.010").orElseThrow();
+        Assertions.assertEquals( 1000.01d, op.n);
+        Assertions.assertEquals( 1000, op.i);
+        Assertions.assertEquals( 3, op.v);
+        Assertions.assertEquals( 2, op.w);
+        Assertions.assertEquals( 10, op.f);
+        Assertions.assertEquals( 1, op.t);
+        Assertions.assertEquals( 0, op.e);
+    }
 
     // basic tests: cardinal
     @Test
@@ -76,6 +125,9 @@ public class PluralRuleTest {
         Assertions.assertEquals( PluralCategory.OTHER, rule.select( 15 ) );
         Assertions.assertEquals( PluralCategory.OTHER, rule.select( 734823 ) );
     }
+
+
+
 
 
     @Test
