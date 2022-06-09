@@ -291,10 +291,20 @@ public class PluralMaker {
     static Map<Ruleset, Set<String>> createRules(final Map<String, Ruleset> inputMap, final String prefix) {
         Map<String, Ruleset> rulesetMap = new HashMap<>( inputMap );
 
-        // alias empty string "" to "root" locale
-        if (rulesetMap.containsKey( "root" )) {
+        // as of CLDR 39, "root" has been renamed to "und".
+        // "", "root" and "und" should all refer to the same locale
+        //
+        if (rulesetMap.containsKey( "und" )) {
+            // CLDR >= 39
+            rulesetMap.put( "root", rulesetMap.get( "und" ) );
+            rulesetMap.put( "", rulesetMap.get( "und" ) );
+        } else if (rulesetMap.containsKey( "root" )) {
+            // CLDR < 39
             rulesetMap.put( "", rulesetMap.get( "root" ) );
+        } else {
+            throw new IllegalStateException("no \"root\" or \"und\" locale found!");
         }
+
 
         // group similar
         final Map<Ruleset, Set<String>> map = rulesetMap.entrySet().stream().collect( groupingBy(

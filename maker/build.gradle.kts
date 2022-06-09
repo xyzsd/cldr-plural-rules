@@ -1,17 +1,17 @@
 plugins {
     id("java")
-    id("de.undercouch.download") version "4.1.1"
+    id("de.undercouch.download") version "5.1.0"
 }
 
 
 dependencies {
     implementation(project(":shared"))
     implementation("com.squareup:javapoet:1.13.0")
-    implementation("com.squareup.moshi:moshi-adapters:1.11.0")
-    implementation("com.squareup.moshi:moshi:1.11.0")
+    implementation("com.squareup.moshi:moshi-adapters:1.13.0")
+    implementation("com.squareup.moshi:moshi:1.13.0")
     implementation("com.google.code.findbugs:jsr305:3.0.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
 
 
