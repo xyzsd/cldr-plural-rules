@@ -6,10 +6,14 @@ and creates a library for using these rules which is independent from the [ICU][
 This project is compliant with the [CLDR Language Plural Rules][cldrPlurals].
 
 The [generated library][jar_dl] is:
-* Current with Unicode 13/[CLDR 39][cldr_rel] (Current as of April 7, 2021)
-* Contains all languages and regions as defined in CLDR v39
-* Simple, lightweight (~ 25 kB .jar)
+* Current with Unicode 14/[CLDR 41.0.0][cldr_rel] (April 2022)
+* Contains all languages and regions as defined in CLDR v41
+* Simple, lightweight (~ 26 kB .jar)
 * Self-contained; no additional dependencies or data files
+
+## Versioning
+As of CLDR 41, the version number of this library will be synchronized with the CLDR versions.
+
 
 Usage
 -----
@@ -74,6 +78,9 @@ assert (knownRule != null);
 
 ```
 Caveat: the empty String (`""`) and String `"root"` are equivalent to `Locale.ROOT`. 
+As of CLDR 39, the `"root"` locale has been renamed to `"und"`. Therefore, for versions of
+this library supporting CLDR versions of 39 or higher, `""`, `"root"` and `"und"` are 
+equivalent.
 
 If localization information cannot be obtained for a given language, ```createOrDefault()``` will return 
 the root Locale `Locale.ROOT`. 
@@ -134,15 +141,15 @@ Download [the JAR][jar_dl] or use via Maven:
 
 ```xml
 <dependency>
-  <groupId>net.xyzsd.plurals</groupId>
-  <artifactId>cldr-plural-rules</artifactId>
-  <version>2.0</version>
-  <type>pom</type>
+   <groupId>net.xyzsd.plurals</groupId>
+   <artifactId>cldr-plural-rules</artifactId>
+   <version>41</version>
 </dependency>
+
 ```
 or Gradle:
 ```kotlin
-implementation("net.xyzsd.plurals:cldr-plural-rules:1.0.1")
+implementation("net.xyzsd.plurals:cldr-plural-rules:41")
 ```
 
 Documentation
@@ -169,7 +176,7 @@ is fully exposed, and can be used directly instead of the `PluralRule` wrapper c
 
 License
 -------
-Copyright 2020, 2021 xyzsd
+Copyright 2020-2022, xyzsd
 
 Licensed under either of
 
@@ -182,14 +189,14 @@ at your option.
 
 
 
-[jar_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/2.0/cldr-plural-rules-1.0.1.jar
-[docs_dl]: https://repo1.maven.org/maven2/net/xyzsd/plurals/cldr-plural-rules/2.0/cldr-plural-rules-1.0.1-javadoc.jar
+[jar_dl]: https://oss.sonatype.org/service/local/repositories/releases/content/net/xyzsd/plurals/cldr-plural-rules/41/cldr-plural-rules-41.jar
+[docs_dl]: https://oss.sonatype.org/service/local/repositories/releases/content/net/xyzsd/plurals/cldr-plural-rules/41/cldr-plural-rules-41-javadoc.jar
 [docs]: https://javadoc.io/doc/net.xyzsd.plurals/cldr-plural-rules/latest/index.html
 [tr35]: https://unicode.org/reports/tr35/tr35-numbers.html
 [cldrPlurals]: https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
 [icu]: https://site.icu-project.org/
 [icu4j]: https://github.com/unicode-org/icu
-[cldr_rel]: http://cldr.unicode.org/index/downloads/cldr-39
+[cldr_rel]: http://cldr.unicode.org/index/downloads/cldr-41
 [cardinal]: https://www.dictionary.com/browse/cardinal-number
 [ordinal]: https://www.dictionary.com/browse/ordinal-number
 
