@@ -6,9 +6,9 @@ and creates a library for using these rules which is independent from the [ICU][
 This project is compliant with the [CLDR Language Plural Rules][cldrPlurals].
 
 The [generated library][jar_dl] is:
-* Current with Unicode 14/[CLDR 41.0.0][cldr_rel] (April 2022)
-* Contains all languages and regions as defined in CLDR v41
-* Simple, lightweight (~ 26 kB .jar)
+* Current with [CLDR 48][cldr_rel] (Novembert 2025) plural supplemental
+* Contains all languages and regions as defined in CLDR 48
+* Simple, lightweight (~ 27 kB .jar)
 * Self-contained; no additional dependencies or data files
 
 ## Versioning
@@ -176,7 +176,7 @@ is fully exposed, and can be used directly instead of the `PluralRule` wrapper c
 
 License
 -------
-Copyright 2020-2022, xyzsd
+Copyright 2020-2026, xyzsd
 
 Licensed under either of
 
@@ -196,7 +196,7 @@ at your option.
 [cldrPlurals]: https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
 [icu]: https://site.icu-project.org/
 [icu4j]: https://github.com/unicode-org/icu
-[cldr_rel]: http://cldr.unicode.org/index/downloads/cldr-41
+[cldr_rel]: http://cldr.unicode.org/index/downloads/cldr-48
 [cardinal]: https://www.dictionary.com/browse/cardinal-number
 [ordinal]: https://www.dictionary.com/browse/ordinal-number
 
