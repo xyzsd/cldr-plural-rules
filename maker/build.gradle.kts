@@ -6,9 +6,9 @@ plugins {
 
 dependencies {
     implementation(project(":shared"))
-    implementation("com.squareup:javapoet:1.13.0")
-    implementation("com.squareup.moshi:moshi-adapters:1.13.0")
-    implementation("com.squareup.moshi:moshi:1.13.0")
+    implementation("com.palantir.javapoet:javapoet:0.11.0")
+    implementation("com.squareup.moshi:moshi-adapters:1.15.2")
+    implementation("com.squareup.moshi:moshi:1.15.2")
     implementation("com.google.code.findbugs:jsr305:3.0.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")

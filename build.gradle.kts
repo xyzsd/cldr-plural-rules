@@ -19,12 +19,10 @@ allprojects {
         gradlePluginPortal()
     }
 
-    // to create reproducible builds ...
+    // to better create reproducible builds ...
     tasks.withType<AbstractArchiveTask>().configureEach {
         isReproducibleFileOrder = true
         isPreserveFileTimestamps = false
-        dirMode = 775
-        fileMode = 664
         archiveVersion.set("${project.version}")
     }
 }
@@ -120,6 +118,8 @@ tasks.withType<Jar>().configureEach {
     }
 
     includeEmptyDirs = false
+
+
 
     // we only want classes from 'plurals' and 'shared'
     from("${project(":shared").buildDir}/classes/java/main/")

@@ -10,7 +10,7 @@
 // except according to those terms.
 package net.xyzsd.plurals.maker;
 
-import com.squareup.javapoet.*;
+import com.palantir.javapoet.*;
 import com.squareup.moshi.*;
 import com.squareup.moshi.adapters.EnumJsonAdapter;
 import net.xyzsd.plurals.PluralCategory;
@@ -531,15 +531,15 @@ public class PluralMaker {
     // this modifies the ordMap Ruleset(s) if duplicates are found
     static void findDuplicateRules(Map<Ruleset, Set<String>> ordMap, Map<Ruleset, Set<String>> cardMap) {
         final Map<CodeBlock, String> cbMap = cardMap.keySet().stream().collect( toMap(
-                r -> r.spec.initializer,
+                r -> r.spec.initializer(),
                 r -> r.ruleName
         ) );
 
         final Map<Ruleset, String> collect = ordMap.keySet().stream()
-                .filter( r -> cbMap.containsKey( r.spec.initializer ) )
+                .filter( r -> cbMap.containsKey( r.spec.initializer() ) )
                 .collect( toMap(
                         r -> r,
-                        r -> cbMap.get( r.spec.initializer )
+                        r -> cbMap.get( r.spec.initializer() )
                 ) );
 
         // mutate
