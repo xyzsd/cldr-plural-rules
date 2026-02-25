@@ -11,7 +11,7 @@ plugins {
 
 allprojects {
     group = "net.xyzsd.plurals"
-    version = "41"     // version should be == CLDR version for clarity
+    version = "48"     // version should be == CLDR version for clarity
     // use 'rootProject.name' (from settings.gradle.kts) for base name
 
     repositories {
