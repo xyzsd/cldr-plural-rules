@@ -31,12 +31,13 @@ import java.util.function.Function;
  * </p>
  * <p>
  * For example:
+ * <pre>
  * {@code
  * PluralRule rule = PluralRule.createOrDefault(Locale.ENGLISH, PluralRuleType.ORDINAL);
  * assert (rule.select(1) == PluralCategory.ONE);                  // e.g., "1 day"
  * assert (rule.select(10) == PluralCategory.OTHER);               // e.g., "10 days"
  * assert (rule.select("1100.00") == PluralCategory.OTHER);        // e.g., "1100.00 days"
- * <p>
+ *
  * PluralRule rule = PluralRule.createOrDefault(Locale.ENGLISH, PluralRuleType.CARDINAL);
  * assert (rule.select(1) == PluralCategory.ONE);              // e.g, "1st"   use 'st' suffix
  * assert (rule.select(2) == PluralCategory.TWO);              // e.g., "2nd"  use 'nd' suffix
@@ -45,6 +46,7 @@ import java.util.function.Function;
  * assert (rule.select(43) == PluralCategory.FEW);             // e.g., "43rd"
  * assert (rule.select(50) == PluralCategory.OTHER);           // e.g., "50th"
  * }
+ * </pre>
  * </p>
  * <p>
  * The PluralCategory returned determines how subsequent localization logic then handles the number, ranking,
