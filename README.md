@@ -154,7 +154,7 @@ implementation("net.xyzsd.plurals:cldr-plural-rules:48.2")
 
 Documentation
 -------------
-[Download][docs_dl] or [view online][docs].
+Download (via github or Maven Central) or [view online][docs].
 
 Building
 --------
