@@ -6,8 +6,8 @@ and creates a library for using these rules which is independent from the [ICU][
 This project is compliant with the [CLDR Language Plural Rules][cldrPlurals].
 
 The [generated library][jar_dl] is:
-* Current with [CLDR 48][cldr_rel] (Novembert 2025) plural supplemental
-* Contains all languages and regions as defined in CLDR 48
+* Current with [CLDR 48.2][cldr_rel] (2026-03-03) plural supplemental
+* Contains all languages and regions as defined in CLDR 48.2
 * Simple, lightweight (~ 27 kB .jar)
 * Self-contained; no additional dependencies or data files
 
@@ -143,13 +143,13 @@ Download [the JAR][jar_dl] or use via Maven:
 <dependency>
    <groupId>net.xyzsd.plurals</groupId>
    <artifactId>cldr-plural-rules</artifactId>
-   <version>41</version>
+   <version>48.2</version>
 </dependency>
 
 ```
 or Gradle:
 ```kotlin
-implementation("net.xyzsd.plurals:cldr-plural-rules:41")
+implementation("net.xyzsd.plurals:cldr-plural-rules:48.2")
 ```
 
 Documentation
@@ -196,7 +196,7 @@ at your option.
 [cldrPlurals]: https://unicode.org/reports/tr35/tr35-numbers.html#Language_Plural_Rules
 [icu]: https://site.icu-project.org/
 [icu4j]: https://github.com/unicode-org/icu
-[cldr_rel]: http://cldr.unicode.org/index/downloads/cldr-48
+[cldr_rel]: https://cldr.unicode.org/index/downloads
 [cardinal]: https://www.dictionary.com/browse/cardinal-number
 [ordinal]: https://www.dictionary.com/browse/ordinal-number
 
